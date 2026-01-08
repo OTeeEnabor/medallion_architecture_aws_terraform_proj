@@ -1,10 +1,9 @@
 
 terraform {
   backend "s3" {
-    bucket         = "CHANGE_ME-state-bucket"
+    bucket         = "jozzi-pizza-state-bucket"
     key            = "medallion-aws/dev/terraform.tfstate"
-    region         = "${var.aws_region}"
-    dynamodb_table = "CHANGE_ME-lock-table"
-    encrypt        = true
+    region         = "eu-west-1"
+    use_lockfile = true
   }
 }

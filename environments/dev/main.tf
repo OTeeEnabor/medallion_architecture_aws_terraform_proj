@@ -7,6 +7,7 @@ module "iam" {
   source      = "../../modules/iam"
   project     = var.project
   environment = var.environment
+  state_bucket = var.state_bucket
   tags        = local.tags
 }
 
@@ -46,6 +47,9 @@ module "glue_jobs" {
   depends_on        = [module.glue_catalog]
 }
 
+module "lambda" {
+  source = "../../modules/"
+}
 module "athena" {
   source           = "../../modules/athena"
   project          = var.project
@@ -56,12 +60,12 @@ module "athena" {
 }
 
 # Optional orchestration via EventBridge/Lambda or Step Functions
-module "eventbridge" {
-  source             = "../../modules/eventbridge"
-  project            = var.project
-  environment        = var.environment
-  bronze_job_name    = module.glue_jobs.bronze_to_silver_job_name
-  silver_job_name    = module.glue_jobs.silver_to_gold_job_name
-  tags               = local.tags
-  depends_on         = [module.glue_jobs]
-}
+# module "eventbridge" {
+#   source             = "../../modules/eventbridge"
+#   project            = var.project
+#   environment        = var.environment
+#   bronze_job_name    = module.glue_jobs.bronze_to_silver_job_name
+#   silver_job_name    = module.glue_jobs.silver_to_gold_job_name
+#   tags               = local.tags
+#   depends_on         = [module.glue_jobs]
+# }
