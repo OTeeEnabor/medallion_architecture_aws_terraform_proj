@@ -14,4 +14,8 @@ variable "s3_data_lake_bronze_prefix" {
   type        = string
   description = "The data_lake_bucket arn from the s3_data_lake_module"
 }
+variable "database_name" {
+  type        = string
+  description = "The name of the glue catalog database."
+}
 

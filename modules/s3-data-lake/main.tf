@@ -26,7 +26,7 @@ resource "aws_s3_bucket_server_side_encryption_configuration" "sse" {
 # upload bronze data to s3
 resource "aws_s3_object" "bronze_data" {
   bucket       = aws_s3_bucket.lake.bucket
-  key          = "bronze/"
+  key          = "bronze/${local.data_name}"
   source       = "${local.data_path}"
   etag         = filemd5("${local.data_path}")
   content_type = "text/csv"
