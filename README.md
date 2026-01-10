@@ -1,10 +1,17 @@
 
 # Medallion Architecture on AWS (Terraform + Glue + Athena)
 
+## Background Context
+
+Jozi Pizza Co. has been experiencing inconsistent delivery times and a recent increase in customer complaints. As a delivery‑only store, the business is concerned that operational bottlenecks—particularly within the preparation and dispatch processes during peak hours—are impacting customer satisfaction and reducing repeat sales. The company currently lacks a data analytics capability and is interested in investing in one.
+
+The objective is to build a data analytics platform on AWS that will enable business intelligence analysts to diagnose internal operations using the company’s existing operational data. With this platform, Jozi Pizza Co. will be able to identify the root causes of delays, inefficiencies, and quality issues, and implement targeted, data‑driven improvements.
+
 
 This project implements a **Bronze → Silver → Gold** data lake on AWS using **Terraform**, **AWS Glue**, and **Amazon Athena**.
 
 <img src="jozzi_pizza_medallion_architecture.png" alt="Project architecture" width="1200">
+
 
 ## Layers
 - **Bronze**: Raw landing zone (no transforms)
@@ -20,7 +27,7 @@ This project implements a **Bronze → Silver → Gold** data lake on AWS using 
 
 ## Operate
 - Use **AWS Glue Crawlers** to register tables in the Glue **Data Catalog**.
-- Trigger jobs on demand or via **Step Functions**/**EventBridge** + **Lambda** (module stub provided).
+- Trigger jobs on demand or via **Step Functions**/**EventBridge** + **Lambda**.
 - Query curated data using **Athena**.
 
 ## Security & Governance
