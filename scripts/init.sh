@@ -1,1 +1,1 @@
-terraform -chdir=environments/dev init
+terraform -chdir=environments/dev init -reconfigure

@@ -1,27 +1,44 @@
+resource "aws_s3_object" "test_deploy_script_s3" {
+  bucket = var.s3_data_lake
+  key    = "${var.scripts_prefix}test/testDeployScript.py"
+  source = "${local.glue_scripts_path}testDeployScript.py"
+  etag   = filemd5("${local.glue_scripts_path}testDeployScript.py")
+}
 
-variable "project"           { type = string }
-variable "environment"       { type = string }
-variable "glue_role_arn"     { type = string }
-variable "script_s3_path"    { type = string }
-variable "bronze_prefix"     { type = string }
-variable "silver_prefix"     { type = string }
-variable "gold_prefix"       { type = string }
-variable "glue_version"      { type = string }
-variable "worker_type"       { type = string }
-variable "number_of_workers" { type = number }
-variable "tags"              { type = map(string) }
-
-resource "aws_glue_job" "bronze_to_silver" {
-  name         = "${var.project}-${var.environment}-bronze-to-silver"
-  role_arn     = var.glue_role_arn
-  glue_version = var.glue_version
-  worker_type  = var.worker_type
+resource "aws_glue_job" "test_deployment_script" {
+  name              = "${var.project}-${var.environment}-test"
+  role_arn          = var.glue_role_arn
+  glue_version      = var.glue_version
+  worker_type       = var.worker_type
   number_of_workers = var.number_of_workers
 
   command {
     name            = "glueetl"
     python_version  = "3"
-    script_location = "${var.script_s3_path}bronze_to_silver.py"
+    script_location = "s3://${var.s3_data_lake}/${var.scripts_prefix}testDeployScript.py"
+  }
+
+  default_arguments = {
+    "--job-language"   = "python"
+    "--enable-metrics" = "true"
+    "--PROJECT"        = var.project
+    "--ENV"            = var.environment
+  }
+
+  tags = var.tags
+}
+
+resource "aws_glue_job" "bronze_to_silver" {
+  name              = "${var.project}-${var.environment}-bronze-to-silver"
+  role_arn          = var.glue_role_arn
+  glue_version      = var.glue_version
+  worker_type       = var.worker_type
+  number_of_workers = var.number_of_workers
+
+  command {
+    name            = "glueetl"
+    python_version  = "3"
+    script_location = "s3://${var.s3_data_lake}/${var.scripts_prefix}bronze_to_silver.py"
   }
 
   default_arguments = {
@@ -37,16 +54,16 @@ resource "aws_glue_job" "bronze_to_silver" {
 }
 
 resource "aws_glue_job" "silver_to_gold" {
-  name         = "${var.project}-${var.environment}-silver-to-gold"
-  role_arn     = var.glue_role_arn
-  glue_version = var.glue_version
-  worker_type  = var.worker_type
+  name              = "${var.project}-${var.environment}-silver-to-gold"
+  role_arn          = var.glue_role_arn
+  glue_version      = var.glue_version
+  worker_type       = var.worker_type
   number_of_workers = var.number_of_workers
 
   command {
     name            = "glueetl"
     python_version  = "3"
-    script_location = "${var.script_s3_path}silver_to_gold.py"
+    script_location = "s3://${var.s3_data_lake}/${var.scripts_prefix}silver_to_gold.py"
   }
 
   default_arguments = {
@@ -62,4 +79,4 @@ resource "aws_glue_job" "silver_to_gold" {
 }
 
 output "bronze_to_silver_job_name" { value = aws_glue_job.bronze_to_silver.name }
-output "silver_to_gold_job_name"   { value = aws_glue_job.silver_to_gold.name }
+output "silver_to_gold_job_name" { value = aws_glue_job.silver_to_gold.name }

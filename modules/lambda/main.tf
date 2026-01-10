@@ -1,68 +1,44 @@
 
-variable "bucket_name"   { type = string }
-# variable "landing_prefix" { type = string  default = "landing/" }
-# variable "bronze_prefix"  { type = string  default = "bronze/" }
-# variable "lambda_name"    { 
-#     type = string  
-#     default = "unzip-to-bronze" 
-# }
-# variable "aws_region"     { type = string  default = "eu-west-1" }
 
-# # ----- IAM role for Lambda -----
-# resource "aws_iam_role" "lambda_role" {
-#   name = "${var.lambda_name}-role"
-#   assume_role_policy = jsonencode({
-#     Version = "2012-10-17",
-#     Statement = [{
-#       Effect = "Allow",
-#       Principal = { Service = "lambda.amazonaws.com" },
-#       Action   = "sts:AssumeRole"
-#     }]
-#   })
-# }
+resource "aws_lambda_function" "unzip_to_bronze" {
+  function_name = var.lambda_name
+  role          = var.lambda_role_arn
+  handler       = "lambda_unzip_to_bronze.lambda_handler"
+  runtime       = "python3.13"
+  filename      = data.archive_file.lambda_zip.output_path
+  timeout       = 60
+  memory_size   = 512
 
-# resource "aws_iam_role_policy_attachment" "lambda_basic_logs" {
-#   role       = aws_iam_role.lambda_role.name
-#   policy_arn = "arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole"
-# }
+  environment {
+    variables = {
+      BRONZE_PREFIX  = var.s3_data_lake_bronze_prefix
+      LANDING_PREFIX = var.s3_data_lake_landing_prefix
+    }
+  }
 
-# # Narrow S3 permissions to bucket and prefixes
-# resource "aws_iam_policy" "lambda_s3_policy" {
-#   name   = "${var.lambda_name}-s3-policy"
-#   policy = jsonencode({
-#     Version = "2012-10-17",
-#     Statement = [
-#       {
-#         Sid: "ReadLanding",
-#         Effect: "Allow",
-#         Action: ["s3:GetObject","s3:ListBucket"],
-#         Resource: [
-#           "arn:aws:s3:::${var.bucket_name}",
-#           "arn:aws:s3:::${var.bucket_name}/${var.landing_prefix}*"
-#         ]
-#       },
-#       {
-#         Sid: "WriteBronze",
-#         Effect: "Allow",
-#         Action: ["s3:PutObject","s3:AbortMultipartUpload"],
-#         Resource: [
-#           "arn:aws:s3:::${var.bucket_name}/${var.bronze_prefix}*"
-#         ]
-#       }
-#     ]
-#   })
-# }
+  depends_on = [aws_iam_role_policy_attachment.lambda_basic_logs, aws_iam_role_policy_attachment.lambda_s3_attach]
+}
 
-# resource "aws_iam_role_policy_attachment" "lambda_s3_attach" {
-#   role       = aws_iam_role.lambda_role.name
-#   policy_arn = aws_iam_policy.lambda_s3_policy.arn
-# }
+# ----- Lambda function -----
 
-# ----- Package Lambda code locally -----
-# Assumes lambda_unzip_to_bronze.py is in ./lambda-src/
-# data "archive_file" "lambda_zip" {
-#   type        = "zip"
-#   source_dir  = "${path.module}/lambda-src"
-#   output_path = "${path.module}/build/unzip_to_bronze.zip"
-# }
+# ----- S3 -> Lambda invoke permission -----
+resource "aws_lambda_permission" "allow_s3_invoke" {
+  statement_id  = "AllowExecutionFromS3"
+  action        = "lambda:InvokeFunction"
+  function_name = aws_lambda_function.unzip_to_bronze.function_name
+  principal     = "s3.amazonaws.com"
+  source_arn    = var.s3_data_lake_arn
+}
 
+# ----- S3 bucket notification on landing prefix -----
+resource "aws_s3_bucket_notification" "landing_events" {
+  bucket = var.s3_data_lake
+
+  lambda_function {
+    lambda_function_arn = aws_lambda_function.unzip_to_bronze.arn
+    events              = ["s3:ObjectCreated:*"]
+    filter_prefix       = var.s3_data_lake_landing_prefix
+  }
+
+  depends_on = [aws_lambda_permission.allow_s3_invoke]
+}

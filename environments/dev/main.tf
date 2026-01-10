@@ -3,14 +3,6 @@ terraform {
   required_version = ">= 1.6.0"
 }
 
-module "iam" {
-  source      = "../../modules/iam"
-  project     = var.project
-  environment = var.environment
-  state_bucket = var.state_bucket
-  tags        = local.tags
-}
-
 module "s3_data_lake" {
   source      = "../../modules/s3-data-lake"
   project     = var.project
@@ -18,6 +10,16 @@ module "s3_data_lake" {
   tags        = local.tags
 }
 
+module "iam" {
+  source                     = "../../modules/iam"
+  project                    = var.project
+  environment                = var.environment
+  state_bucket               = var.state_bucket
+  s3_data_lake               = module.s3_data_lake.bucket_name
+  s3_data_lake_arn           = module.s3_data_lake.bucket_arn
+  s3_data_lake_bronze_prefix = module.s3_data_lake.bronze_prefix
+  tags                       = local.tags
+}
 module "glue_catalog" {
   source         = "../../modules/glue-catalog"
   project        = var.project
@@ -36,7 +38,8 @@ module "glue_jobs" {
   project           = var.project
   environment       = var.environment
   glue_role_arn     = module.iam.glue_role_arn
-  script_s3_path    = module.s3_data_lake.script_prefix
+  s3_data_lake      = module.s3_data_lake.bucket_name
+  scripts_prefix    = module.s3_data_lake.script_prefix
   bronze_prefix     = module.s3_data_lake.bronze_prefix
   silver_prefix     = module.s3_data_lake.silver_prefix
   gold_prefix       = module.s3_data_lake.gold_prefix
@@ -47,9 +50,14 @@ module "glue_jobs" {
   depends_on        = [module.glue_catalog]
 }
 
-module "lambda" {
-  source = "../../modules/"
-}
+# module "lambda" {
+#   source                      = "../../modules/"
+#   lambda_role_arn             = module.iam.lambda_role_arn
+#   s3_data_lake                = module.s3_data_lake.bucket_name
+#   s3_data_lake_bronze_prefix  = module.s3_data_lake.bronze_prefix
+#   s3_data_lake_landing_prefix = module.s3_data_lake.landing_prefix
+#   s3_data_lake_arn            = module.s3_data_lake.bucket_arn
+# }
 module "athena" {
   source           = "../../modules/athena"
   project          = var.project

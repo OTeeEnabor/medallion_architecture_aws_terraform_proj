@@ -1,8 +1,4 @@
 
-variable "project"     { type = string }
-variable "environment" { type = string }
-variable "tags"        { type = map(string) }
-
 # create s3 data-lake
 resource "aws_s3_bucket" "lake" {
   bucket        = "${var.project}-${var.environment}-lake"
@@ -27,6 +23,14 @@ resource "aws_s3_bucket_server_side_encryption_configuration" "sse" {
   }
 }
 
+# upload bronze data to s3
+resource "aws_s3_object" "bronze_data" {
+  bucket       = aws_s3_bucket.lake.bucket
+  key          = "bronze/"
+  source       = "${local.data_path}"
+  etag         = filemd5("${local.data_path}")
+  content_type = "text/csv"
+}
 locals {
   landing_prefix = "landing/"
   bronze_prefix  = "bronze/"
@@ -36,10 +40,11 @@ locals {
   athena_prefix  = "athena-results/"
 }
 
-output "bucket_name"             { value = aws_s3_bucket.lake.bucket }
-output "landing_prefix"           { value = local.landing_prefix }
-output "bronze_prefix"           { value = local.bronze_prefix }
-output "silver_prefix"           { value = local.silver_prefix }
-output "gold_prefix"             { value = local.gold_prefix }
-output "script_prefix"           { value = local.scripts_prefix }
-output "athena_results_prefix"   { value = local.athena_prefix }
+output "bucket_name" { value = aws_s3_bucket.lake.bucket }
+output "bucket_arn" { value = aws_s3_bucket.lake.arn }
+output "landing_prefix" { value = local.landing_prefix }
+output "bronze_prefix" { value = local.bronze_prefix }
+output "silver_prefix" { value = local.silver_prefix }
+output "gold_prefix" { value = local.gold_prefix }
+output "script_prefix" { value = local.scripts_prefix }
+output "athena_results_prefix" { value = local.athena_prefix }

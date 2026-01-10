@@ -1,9 +1,9 @@
 
-variable "project"          { type = string }
-variable "environment"      { type = string }
+variable "project" { type = string }
+variable "environment" { type = string }
 variable "query_results_s3" { type = string }
-variable "glue_database"    { type = string }
-variable "tags"             { type = map(string) }
+variable "glue_database" { type = string }
+variable "tags" { type = map(string) }
 
 resource "aws_athena_workgroup" "wg" {
   name = "${var.project}_${var.environment}_wg"
