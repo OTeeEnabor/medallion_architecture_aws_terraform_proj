@@ -15,7 +15,7 @@ resource "aws_glue_job" "test_deployment_script" {
   command {
     name            = "glueetl"
     python_version  = "3"
-    script_location = "s3://${var.s3_data_lake}/${var.scripts_prefix}/test/testDeployScript.py"
+    script_location = "s3://${var.s3_data_lake}/${var.scripts_prefix}test/testDeployScript.py"
   }
 
   default_arguments = {

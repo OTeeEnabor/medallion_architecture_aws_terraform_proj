@@ -47,7 +47,7 @@ module "glue_jobs" {
   gold_prefix       = module.s3_data_lake.gold_prefix
   glue_version      = "5.0"
   worker_type       = "G.1X"
-  number_of_workers = 5
+  number_of_workers = 2
   tags              = local.tags
   depends_on        = [module.glue_catalog]
 }
