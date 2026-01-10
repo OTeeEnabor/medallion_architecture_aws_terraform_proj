@@ -1,7 +1,10 @@
 
 # Medallion Architecture on AWS (Terraform + Glue + Athena)
 
-This starter template implements a **Bronze → Silver → Gold** data lake on AWS using **Terraform**, **AWS Glue**, and **Amazon Athena**.
+
+This project implements a **Bronze → Silver → Gold** data lake on AWS using **Terraform**, **AWS Glue**, and **Amazon Athena**.
+
+<img src="jozzi_pizza_medallion_architecture.png" alt="Project architecture" width="1200">
 
 ## Layers
 - **Bronze**: Raw landing zone (no transforms)
