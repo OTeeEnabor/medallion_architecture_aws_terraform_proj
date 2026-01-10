@@ -10,16 +10,7 @@ module "s3_data_lake" {
   tags        = local.tags
 }
 
-module "iam" {
-  source                     = "../../modules/iam"
-  project                    = var.project
-  environment                = var.environment
-  state_bucket               = var.state_bucket
-  s3_data_lake               = module.s3_data_lake.bucket_name
-  s3_data_lake_arn           = module.s3_data_lake.bucket_arn
-  s3_data_lake_bronze_prefix = module.s3_data_lake.bronze_prefix
-  tags                       = local.tags
-}
+
 module "glue_catalog" {
   source         = "../../modules/glue-catalog"
   project        = var.project
@@ -33,6 +24,17 @@ module "glue_catalog" {
   depends_on     = [module.s3_data_lake, module.iam]
 }
 
+module "iam" {
+  source                     = "../../modules/iam"
+  project                    = var.project
+  environment                = var.environment
+  state_bucket               = var.state_bucket
+  s3_data_lake               = module.s3_data_lake.bucket_name
+  s3_data_lake_arn           = module.s3_data_lake.bucket_arn
+  s3_data_lake_bronze_prefix = module.s3_data_lake.bronze_prefix
+  database_name              = local.database_name
+  tags                       = local.tags
+}
 module "glue_jobs" {
   source            = "../../modules/glue-jobs"
   project           = var.project
